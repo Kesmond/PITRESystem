@@ -1,5 +1,14 @@
 #calculator.py
 
+def annualTaxCalculator(biweekly_pair):
+    annual_gross_income = 0
+    tax_witheld = 0
+    for income,tax in biweekly_pair:
+        annual_gross_income += income
+        tax_witheld += tax
+    
+    return annual_gross_income, tax_witheld
+
 def taxableIncomeCalculator(annual_income):
     if annual_income < 18201:
         return 0
