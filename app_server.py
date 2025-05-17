@@ -1,7 +1,7 @@
 #app_server.py
 
 from xmlrpc.server import SimpleXMLRPCServer
-from calculator import taxableIncomeCalculator, medicalLevyCalculator, mlsCalculator
+from calculator import taxableIncomeCalculator, medicalLevyCalculator, mlsCalculator, annualTaxCalculator
 
 #Data from .db
 #data = {
@@ -9,9 +9,9 @@ from calculator import taxableIncomeCalculator, medicalLevyCalculator, mlsCalcul
 #}
 
 def get_data(data):
-    annual_taxable_income = data[0][0]
-    annual_tax_witheld = data[0][1]
+    biweekly_tax = data[0]
     insurance = data[1]
+    annual_taxable_income, annual_tax_witheld = annualTaxCalculator(biweekly_tax)
 
     tax = taxableIncomeCalculator(annual_taxable_income)
     ml = medicalLevyCalculator(annual_taxable_income)
@@ -20,7 +20,7 @@ def get_data(data):
     net_income = annual_taxable_income - total_tax
     tax_refund_estimate = annual_tax_witheld - total_tax
     #returnData = [ID, "NO TFN", annual_taxable_income, annual_tax_witheld, net_income, tax_refund_estimate]
-    returnData = [annual_taxable_income, annual_tax_witheld, net_income, tax_refund_estimate]
+    returnData = [annual_taxable_income, annual_tax_witheld, net_income, tax_refund_estimate, total_tax]
     return returnData
 
 server = SimpleXMLRPCServer(("localhost", 8000))
