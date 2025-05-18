@@ -9,15 +9,18 @@ from calculator import taxableIncomeCalculator, medicalLevyCalculator, mlsCalcul
 #}
 
 def get_data(data):
-    biweekly_tax = data[0]
     insurance = data[1] #True or False
     user_ID = data[2]
     if biweekly_tax == [(0,0)]:
         has_TFN = True
-        annual_taxable_income = 1
         #fetch data from database
+        #If found
+        #annual_taxable_income, annual_tax_witheld = annualTaxCalculator(biweekly_tax)
+        #else:
+            #
     else:
         has_TFN = False
+        biweekly_tax = data[0]
         annual_taxable_income, annual_tax_witheld = annualTaxCalculator(biweekly_tax)
 
     #Returns back error message when encountering missing data
