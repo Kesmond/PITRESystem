@@ -5,33 +5,34 @@ def biweeklyIncomeCalculator():
     print("\nEnter up to 26 biweekly income and tax withheld (e.g. '1000 100')")
     tax_pairs = []
     sum_income = 0
-    sum_tax = 0
     week = 1
     while week <= 26:
         weekly_pair = input(f"Enter biweekly income (Week {week}) or 'done' to finish: ")
 
         if weekly_pair.lower() == 'done':
-            print("Exited by user.")
-            break
+            if sum_income > 0:
+                print("Exited by user.")
+                break
+            else:
+                print("Income and tax can't be zero.")
+                continue
 
         try:
             income, tax = map(float, weekly_pair.split())
             if income < 0 or tax < 0:
                 print("Values cannot be negative. Please try again.")
                 continue
-            elif tax > income:
+            elif tax >= income:
                 print("Please enter the right amount.")
                 continue
 
             sum_income = sum_income + income
-            sum_tax = sum_tax + tax
             tax_pairs.append((income,tax))
             week += 1
         except ValueError:
             print("Invalid input. Please enter two numbers, separated by space.")
 
     return tax_pairs
-    #return sum_income, sum_tax
 
 
 def main():
@@ -40,10 +41,10 @@ def main():
     proxy = xmlrpc.client.ServerProxy("http://localhost:8000/")
     #username = input("Username: ")
     #password = input("Password: ")
-    username = "admin"
+    username = 123456
     password = "admin"
 
-    if username == 'admin' and password == 'admin':
+    if username == 123456 and password == 'admin':
         #Implementation
         income_pairs = []
         has_TFN = False
@@ -56,6 +57,7 @@ def main():
                 tfn = -1
                 has_TFN = False
                 income_pairs = biweeklyIncomeCalculator()
+                #print(income_pairs)
                 break
 
             if tfn.isdigit() and len(tfn) == 8:
@@ -82,25 +84,30 @@ def main():
         if has_TFN:
             income_pairs.append((0,0))
         
-        data = [income_pairs, have_PHIC]
-        #print(data)
+        data = [income_pairs, have_PHIC, username]
+        print(data)
         try:
             result = proxy.get_data(data)
 
+            print("")
             if type(result) is str:
-                print("No Return")
+                print(result)
             else:
+                print("ID:", result[0])
+                if result[1]:
+                    print("TFN:", tfn)
+                else:
+                    print("No TFN")
                 print("")
-                #print(ID)
-                print("NO TFN")
-                print(f"Annual Taxable Income:", result[0])
-                print(f"Total Tax Witheld:", result[1])
-                print(f"Total net-income:", result[2])
-                if result[3] >= 0:
-                    print(f"Estimated tax refund of:", result[3])
-                elif result[3] < 0:
-                    print(f"Estimated tax amount of", result[3]*-1, "owing to the ATO")
-                print(f"Total tax:", result[4])
+                print("Annual Taxable Income:", result[2])
+                print("Total Tax Witheld:", result[3])
+                print("Total net-income:", result[4])
+                print("Total tax:", result[6])
+                print("")
+                if result[5] >= 0:
+                    print("Estimated tax refund of:", result[5])
+                elif result[5] < 0:
+                    print(f"Estimated tax amount of ${result[5]*-1} owing to the ATO")
         except Exception as e:
             print(f"Error {e}")
     else:
@@ -108,11 +115,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-#Eligible TFN then print user information
-
-#Otherwise
-#Request for ID, biweekly (taxable_income, tax_witheld) pair
-#Health Insurance
-
-#Print Tax Return Estimate Result
+    
