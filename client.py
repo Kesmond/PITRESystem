@@ -39,16 +39,19 @@ def main():
     #Authentication
     #ID 6 digit and password
     proxy = xmlrpc.client.ServerProxy("http://localhost:8000/")
+    print("=================================")
+    print("=== Welcome to Tax Calculator ===")
+    print("=================================\n")
     #username = input("Username: ")
     #password = input("Password: ")
-    username = 123456
+    username = "123456"
     password = "admin"
 
-    if username == 123456 and password == 'admin':
+    if username == '123456' and password == 'admin':
         #Implementation
         income_pairs = []
         has_TFN = False
-        print("\nWelcome User!")
+        print(f"\n\n=== Welcome {username}! ===\n")
         print("Please enter your 8 digit TFN number! (-1 if you don't have)")
         
         while True:
@@ -85,11 +88,13 @@ def main():
             income_pairs.append((0,0))
         
         data = [income_pairs, have_PHIC, username]
-        print(data)
+        #print(data)
         try:
             result = proxy.get_data(data)
 
-            print("")
+            print("\n\n==========================")
+            print("=== Tax Summary Report ===")
+            print("==========================\n")
             if type(result) is str:
                 print(result)
             else:
@@ -99,15 +104,15 @@ def main():
                 else:
                     print("No TFN")
                 print("")
-                print("Annual Taxable Income:", result[2])
-                print("Total Tax Witheld:", result[3])
-                print("Total net-income:", result[4])
-                print("Total tax:", result[6])
+                print(f"Annual Taxable Income: ${result[2]:.2f}")
+                print(f"Total Tax Witheld: ${result[3]:.2f}")
+                print(f"Total net-income: ${result[4]:.2f}")
+                print(f"Total tax:: ${result[6]:.2f}")
                 print("")
                 if result[5] >= 0:
-                    print("Estimated tax refund of:", result[5])
+                    print(f"Estimated tax refund of:: ${result[5]:.2f}")
                 elif result[5] < 0:
-                    print(f"Estimated tax amount of ${result[5]*-1} owing to the ATO")
+                    print(f"Estimated tax amount of ${result[5]*-1:.2f} owing to the ATO")
         except Exception as e:
             print(f"Error {e}")
     else:
@@ -115,4 +120,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
