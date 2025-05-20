@@ -2,7 +2,7 @@
 import xmlrpc.client
 import json
 
-def biweeklyIncomeCalculator():
+def biweekly_income_calculator():
     #Function to input biweekly pairs
     print("\nEnter up to 26 biweekly income and tax withheld (e.g. '1000 100')")
     tax_pairs = []
@@ -38,7 +38,7 @@ def biweeklyIncomeCalculator():
 
     return tax_pairs
 
-def authenticateUser(user_entered, pass_entered):
+def authenticate_user(user_entered, pass_entered):
     #Function to authenticate users during first login
     try:
         #Get the JSON file and load its values
@@ -63,6 +63,29 @@ def authenticateUser(user_entered, pass_entered):
     else:
         return False #User unverified
 
+def get_user_information():
+    print("\n=== Personal Details ===")
+    while True:
+        f_name = input("First name: ").strip()
+        if not f_name:
+            print("First name required.")
+            continue
+        break
+
+    while True:
+        l_name = input("Last name: ").strip()
+        if not l_name:
+            print("Last name required.")
+            continue
+        break
+
+    email = input("Email: ").strip()
+    return {
+        'f_name': f_name,
+        'l_name': l_name,
+        'email': email
+    }
+
 def main():
     #Connect with the Server application
     proxy = xmlrpc.client.ServerProxy("http://localhost:8000/")
@@ -74,7 +97,7 @@ def main():
     #Login Menu, inputs the username and password
     username = input("Username: ")
     password = input("Password: ")
-    authenticate = authenticateUser(username, password) #Verifies the credentials
+    authenticate = authenticate_user(username, password) #Verifies the credentials
 
     if type(authenticate) is bool:
         if authenticate: #Verified user
@@ -89,13 +112,14 @@ def main():
                 if tfn == "-1": #Doesn't have TFN
                     tfn = -1
                     has_TFN = False
-                    income_pairs = biweeklyIncomeCalculator() #Get the biweekly income
+                    income_pairs = biweekly_income_calculator() #Get the biweekly income
                     #print(income_pairs) #Debugging
                     break #Exits the while loop of getting TFN
 
-                #TFN entered are 8 digit numbers 
+                #TFN entered are 8 digit numbers
                 if tfn.isdigit() and len(tfn) == 8:
                     has_TFN = True
+                    user_information = get_user_information()
                     break
                 else: #Invalid format of TFN, e.g. characters, more or less than 8 digits
                     print("Invalid TFN format. It must be 8 digits or -1 if not available")
@@ -103,7 +127,7 @@ def main():
             #User enters PHIC
             while True:
                 try:
-                    have_PHIC = input("\nDo you have a Private Health Insurance Cover? (y/n): ").lower()
+                    have_PHIC = input("\nDo you have a Private Health Insurance Cover? (y/n): ").lower().strip()
                     if have_PHIC == 'y': #Does have PHIC
                         have_PHIC = True
                         break
@@ -114,24 +138,38 @@ def main():
                         raise ValueError("Invalid input. Please enter 'y' or 'n'.")
                         break
                 except ValueError as e:
-                    print(f"Error: {e}")
+                    print(f"Client 1 Error: {e}")
 
             if has_TFN: #User does have a TFN, set default of biweekly pair value to (0,0)
                 income_pairs.append((0,0))
+            else:
+                user_information = {
+                    'f_name': 'N/A',
+                    'l_name': 'N/A',
+                    'email': 'N/A',
+                }
             
-            data = [income_pairs, have_PHIC, username] #Combines biweeklypairs, PHIC, and username
+            data = {
+                'income_pairs': income_pairs,
+                'insurance': have_PHIC,
+                'user_id': username,
+                'tfn': tfn,
+                'user_information': user_information
+            }
+            #data = [income_pairs, have_PHIC, username, tfn, user_information] #Combines biweeklypairs, PHIC, and username
             #print(data) #Debugging
             try:
                 #Sends the result to server-side and recevies the value to 'result'
                 result = proxy.get_data(data)
+                print("")
 
-                print("\n\n==========================")
-                print("=== Tax Summary Report ===")
-                print("==========================\n")
                 #If the value received is a string (Error message)
                 if type(result) is str:
                     print(result) #Print the message
                 else: #If its a list
+                    print("\n==========================")
+                    print("=== Tax Summary Report ===")
+                    print("==========================\n")
                     #Print the values
                     print("ID:", result[0])
                     if result[1]:
@@ -148,8 +186,10 @@ def main():
                         print(f"Estimated tax refund of: ${result[5]:.2f}")
                     elif result[5] < 0:
                         print(f"Estimated tax amount of: ${result[5]*-1:.2f} owing to the ATO")
+            except ConnectionError:
+                print("Client cannot connect to server 1")
             except Exception as e:
-                print(f"Error {e}")
+                print(f"Client 2 Error {e}")
         else: #Unauthenticated user, invalid credentials
             print("Authentication failed!")
     else: #Will only work first time running the application
