@@ -6,18 +6,20 @@ app = Flask(__name__)
 
 DB_PATH = "PITD.db"
 
+#Manually check database has been deployed
 @app.route("/view_all_records")
 def view_all_records():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tax_payers")
+    cursor.execute("SELECT * FROM tax_payers") #Get all data from tax_payers table
     rows = cursor.fetchall()
     conn.close()
     return jsonify(rows)
 
+#Get information needed from app_server request
 @app.route("/get_record", methods=["GET"])
 def get_record():
-    tfn = request.args.get("tfn")
+    tfn = request.args.get("tfn") #Get the TFN from app_server
     if not tfn:
         return jsonify({"error": "TFN parameter is required"}), 400
     
@@ -29,17 +31,17 @@ def get_record():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    #Get taxpayer info
-    cursor.execute("SELECT fname, lname, email FROM tax_payers WHERE tfn = ?", (tfn,))
+    #Get taxpayer info of the TFN from the database
+    cursor.execute("SELECT fname, lname, email, id FROM tax_payers WHERE tfn = ?", (tfn,))
     result = cursor.fetchone()
 
     if not result:
         conn.close()
         return jsonify({"error": "Taxpayer not found"}), 400
     
-    fname, lname, email = result
+    fname, lname, email, id = result #Assign the result to corresponding variables
     
-    #Get payroll records
+    #Get the (salary and tax) from payroll_records table of the TFN
     cursor.execute("""
     SELECT gross_salary, tax_levied
                    FROM payroll_records
@@ -47,15 +49,18 @@ def get_record():
                    ORDER BY pay_period
                    """, (tfn,))
     
+    #Get all tax pairs to biweekly_tax_pairs variable
     biweekly_tax_pairs = [(row[0], row[1]) for row in cursor.fetchall()]
     conn.close()
 
+    #Return all the information
     return jsonify({
         "tfn": tfn,
         "biweekly_tax_pairs": biweekly_tax_pairs,
         "fname": fname,
         "lname": lname,
-        "email": email
+        "email": email,
+        "id": id
     })
 
 def initialise_database():

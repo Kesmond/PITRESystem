@@ -63,24 +63,31 @@ def authenticate_user(user_entered, pass_entered):
     else:
         return False #User unverified
 
-def get_user_information():
+#Get credentials for second level authentication
+def get_user_information(): #CASE SENSITIVE SINCE IT IS PERSONAL INFORMATION
     print("\n=== Personal Details ===")
     while True:
         f_name = input("First name: ").strip()
-        if not f_name:
+        if not f_name: #Must enter first name
             print("First name required.")
             continue
         break
 
     while True:
         l_name = input("Last name: ").strip()
-        if not l_name:
+        if not l_name: #Must enter last name
             print("Last name required.")
             continue
         break
 
-    email = input("Email: ").strip()
-    return {
+    while True:
+        email = input("Email: ").strip()
+        if not email: #Must enter email
+            print("Email required.")
+            continue
+        break
+
+    return { #Return values
         'f_name': f_name,
         'l_name': l_name,
         'email': email
@@ -113,7 +120,7 @@ def main():
                     tfn = -1
                     has_TFN = False
                     income_pairs = biweekly_income_calculator() #Get the biweekly income
-                    #print(income_pairs) #Debugging
+                    #print(income_pairs) #DEBUG
                     break #Exits the while loop of getting TFN
 
                 #TFN entered are 8 digit numbers
@@ -142,22 +149,20 @@ def main():
 
             if has_TFN: #User does have a TFN, set default of biweekly pair value to (0,0)
                 income_pairs.append((0,0))
-            else:
+            else: #If user DOESN'T have TFN, personal information isn't needed
                 user_information = {
                     'f_name': 'N/A',
                     'l_name': 'N/A',
                     'email': 'N/A',
                 }
             
-            data = {
+            data = { #Stores all information to be sent to server application
                 'income_pairs': income_pairs,
                 'insurance': have_PHIC,
                 'user_id': username,
                 'tfn': tfn,
                 'user_information': user_information
             }
-            #data = [income_pairs, have_PHIC, username, tfn, user_information] #Combines biweeklypairs, PHIC, and username
-            #print(data) #Debugging
             try:
                 #Sends the result to server-side and recevies the value to 'result'
                 result = proxy.get_data(data)
@@ -186,7 +191,7 @@ def main():
                         print(f"Estimated tax refund of: ${result[5]:.2f}")
                     elif result[5] < 0:
                         print(f"Estimated tax amount of: ${result[5]*-1:.2f} owing to the ATO")
-            except ConnectionError:
+            except ConnectionError: #Server 1 is offline
                 print("Client cannot connect to server 1")
             except Exception as e:
                 print(f"Client 2 Error {e}")
