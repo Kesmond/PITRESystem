@@ -7,11 +7,21 @@ app = Flask(__name__)
 DB_PATH = "PITD.db"
 
 #Manually check database has been deployed
-@app.route("/view_all_records")
-def view_all_records():
+@app.route("/view_taxpayers_table")
+def view_taxpayers_table():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM tax_payers") #Get all data from tax_payers table
+    rows = cursor.fetchall()
+    conn.close()
+    return jsonify(rows)
+
+#Manually check database has been deployed
+@app.route("/view_payrollrecords_table")
+def view_payrollrecords_table():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM payroll_records") #Get all data from tax_payers table
     rows = cursor.fetchall()
     conn.close()
     return jsonify(rows)
